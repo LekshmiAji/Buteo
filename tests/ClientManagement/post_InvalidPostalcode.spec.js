@@ -45,12 +45,6 @@ test('Load another page using saved token', async ({ request }) => {
     console.error('❌ Error accessing protected route:', error);
   }
 });
-
-            
-            
-            
-            
-            
             
             
             
