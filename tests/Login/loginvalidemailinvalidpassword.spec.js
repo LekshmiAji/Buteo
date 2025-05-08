@@ -1,20 +1,36 @@
-// Load Playwright module
 import { test, expect } from '@playwright/test';
+import dotenv from 'dotenv';
 
+dotenv.config({ path: './tests/.env' });
 
-import { chromium } from 'playwright'; // ✅ Allowed in ESM
 test('Create Post API request', async ({ request }) => {
-  const postResponse1 = await request.post('auth/login', {
+  const baseURL = process.env.BASE_URL;
+  const adminEmail = process.env.ADMIN_EMAIL;
+  //const adminPassword = process.env.ADMIN_PASSWORD;
+
+  const loginUrl = `${baseURL}/auth/login`;
+    const postResponse1 = await request.post('http://202.88.237.201:9988/auth/login', {
+   // const postResponse1 = await request.post(loginUrl, {
     data: {
-        
-            "email": "admin@gmail.com",
-           "password": "sdsd",
-            "type": "platform"
-          
+      email: adminEmail,
+      password: "dd4",
+      type: 'platform', // Uncomment if needed
     },
-  });
+      });
+ 
+  const status = postResponse1.status();
+  console.log('Status:', status);
 
- // const responseBody1 = await postResponse1.json();
- // console.log(responseBody1);
+ const contentType = postResponse1.headers()['content-type'];
+  console.log('Content-Type:', contentType);
+
+  const rawText = await postResponse1.text();
+  console.log('Raw Response Text:', rawText);
+
+  if (contentType && contentType.includes('application/json')) {
+    const jsonData = JSON.parse(rawText);
+    console.log('Parsed JSON:', jsonData);
+  } else {
+    console.warn('Response is not JSON. Check the endpoint or credentials.');
+  }
 });
-

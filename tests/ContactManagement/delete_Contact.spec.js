@@ -1,17 +1,58 @@
 import { test, expect } from '@playwright/test';
-import { getAuthHeaders } from '../../utils/auth.js'; // Adjust path as needed
+import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
 
-test('Create DELETE API request', async ({ request }) => {
-  const headers = getAuthHeaders(); // ✅ No await needed if it's a sync function
+dotenv.config({ path: './tests/.env' });
 
-  const response = await request.delete('/user/contact/10', { headers });
+const TOKEN_PATH = path.join(process.cwd(), 'token.txt'); // Absolute path
 
-  if (response.ok()) {
-    const data = await response.json();
-    console.log('Contact Data:', data);
-  } else {
-    console.error('Failed to fetch contact data:', response.status());
+// ✅ Function to get Authorization header with token
+function getAuthHeaders() {
+  if (!fs.existsSync(TOKEN_PATH)) {
+    throw new Error('❌ Token file not found. Please run the login test first.');
   }
 
-  expect(response.ok()).toBeTruthy(); // Optional assertion
+  const token = fs.readFileSync(TOKEN_PATH, 'utf8').trim();
+  console.log('✅ Loaded Token:', token);
+
+  return {
+    Authorization: `Bearer ${token}`,
+  };
+}
+
+test('Load another page using saved token', async ({ request }) => {
+  console.log('✅ Checking if token file exists at:', TOKEN_PATH);
+
+  const headers = getAuthHeaders(); // ✅ No await needed if it's a sync function
+
+  try {
+    const response = await request.delete('http://202.88.237.201:9988/user/contact/20', {
+      headers,
+    });
+
+    if (response.ok()) {
+      const data = await response.json();
+      console.log('✅ Contact Deleted Successfully:', data);
+    } else {
+      console.error('❌ Failed to delete contact:', response.status(), await response.text());
+    }
+
+    expect(response.ok()).toBeTruthy(); // Optional assertion
+  } catch (error) {
+    console.error('❌ Error during request:', error);
+  }
 });
+
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+  

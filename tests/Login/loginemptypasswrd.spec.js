@@ -1,19 +1,34 @@
-// Load Playwright module
 import { test, expect } from '@playwright/test';
+import dotenv from 'dotenv';
 
-// Write a test
+dotenv.config({ path: './tests/.env' });
+
 test('Create Post API request', async ({ request }) => {
-  const postResponse1 = await request.post('auth/login', {
-    data: {
-        
-            "email": "admin@gmail.com",
-           "password": " ",
-            "type": "platform"
-          
+ // const baseURL = process.env.BASE_URL;
+  const adminEmail = process.env.ADMIN_EMAIL;
+  //const adminPassword = process.env.ADMIN_PASSWORD;
+    const postResponse1 = await request.post('http://202.88.237.201:9988/auth/login', {
+      data: {
+      email:adminEmail,
+      password: "",
+      type: 'platform', // Uncomment if needed
     },
-  });
+      });
+ 
+  const status = postResponse1.status();
+  console.log('Status:', status);
 
-  //const responseBody1 = await postResponse1.json();
-  //console.log(responseBody1);
+ const contentType = postResponse1.headers()['content-type'];
+  console.log('Content-Type:', contentType);
+
+  const rawText = await postResponse1.text();
+  console.log('Raw Response Text:', rawText);
+
+  if (contentType && contentType.includes('application/json')) {
+    const jsonData = JSON.parse(rawText);
+    console.log('Parsed JSON:', jsonData);
+  } else {
+    console.warn('Response is not JSON. Check the endpoint or credentials.');
+  }
 });
 

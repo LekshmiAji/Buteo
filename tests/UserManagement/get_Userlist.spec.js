@@ -1,14 +1,44 @@
-import { test, expect, request } from '@playwright/test';
+import { test, expect } from '@playwright/test';
+import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
 
-test('Create GET API request', async ({ request }) => {
-  const apiContext = request; // use the injected `request` fixture
+dotenv.config({ path: './tests/.env' });
 
-  const response = await apiContext.get('user/userList?limit=2&page=1');
+const TOKEN_PATH = path.join(process.cwd(), 'token.txt'); // Absolute path
 
-  if (response.ok()) {
-    const data = await response.json();
-    console.log('Contact Data:', data);
+test('Load another page using saved token', async ({ request }) => {
+  console.log('✅ Checking if token file exists at:', TOKEN_PATH);
+
+  if (!fs.existsSync(TOKEN_PATH)) {
+    throw new Error('❌ Token file not found. Please run the login test first.');
+  }
+
+  const token = fs.readFileSync(TOKEN_PATH, 'utf8').trim();
+  console.log('✅ Loaded Token:', token);
+
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
+  };
+
+  const userListUrl = 'http://202.88.237.201:9988/user/userList?limit=2&page=1';
+  console.log('User List URL:', userListUrl);
+
+  const userListResponse = await request.get(userListUrl, {
+    headers,
+  });
+
+  const status = userListResponse.status();
+  console.log('✅ User List Response Status:', status);
+
+  if (userListResponse.headers()['content-type']?.includes('application/json')) {
+    const userListData = await userListResponse.json();
+    console.log('✅ User List Response Data:', userListData);
+
+    expect(status).toBe(200);
+    expect(userListData).toHaveProperty('data');
   } else {
-    console.error('Failed to fetch contact data:', response.status());
+    console.error('❌ Response is not JSON. Check the URL or token.');
   }
 });
